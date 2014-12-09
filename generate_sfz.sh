@@ -56,5 +56,5 @@ then
 )
 else
 	echo "Directory $1 is not valid."
-  echo "usage: $0 [--key=value] [SAMPLE_DIR] [NAME_OF_DRUMKIT]"
+  echo "usage: $0 [--key=value] [SAMPLE_DIR] [OUTPUT_FILE]"
 fi
