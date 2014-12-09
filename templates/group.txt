@@ -1,0 +1,10 @@
+<group>
+lokey=1 hikey=127
+loop_mode=no_loop
+ampeg_attack=0.001
+amplfo_freq=8.176
+fillfo_freq=8.176
+pitchlfo_freq=8.176
+fil_type=lpf_2p
+cutoff=19914
+

@@ -1,0 +1,9 @@
+<region>
+sample=__SAMPLE__
+lokey=60
+hikey=60
+pitch_keycenter=60
+pan=0
+pitch_keytrack=0
+transpose=0
+
