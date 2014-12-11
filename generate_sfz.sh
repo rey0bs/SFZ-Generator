@@ -48,9 +48,7 @@ toMidi() {
             notes["B"]=11
             note=$(echo $1 | sed 's/[0-9]*//g')
             octave=$(echo $1 | sed 's/[^0-9]*//g')
-            #echo ${octave}
             echo $((${notes[$note]}+12*(2+$octave)))
-            #echo notes[$note]+12*(2+$octave)
         fi
     fi
 }
@@ -63,13 +61,12 @@ then
 		mkdir -p $HYDROGEN_DIR/$NAME
   fi
  
-  regionlist=""
   placeholders=""
-  golbal_placeholders=""
   (IFS='
 '
   OLD_IFS="$IFS"
   cmpt=0
+  cat $SCRIPT_DIR/templates/group.txt > $OUTPUT
   for file in $(ls | grep -Ei '\.(ogg|wav|flac)'); do
         IFS='-'
         placeholders=""
@@ -87,13 +84,10 @@ then
             fi
         done
         IFS=$OLD_IFS
-        global_placeholders="s/__SAMPLE__/"$file"/g"$placeholders
-        echo $global_placeholders
-	regionlist="$regionlist `cat $SCRIPT_DIR/templates/region.txt | sed -e "$global_placeholders"`"
+        placeholders="s/__SAMPLE__/"$file"/g"$placeholders
+        printf "%s" "`cat $SCRIPT_DIR/templates/region.txt | sed -e "$placeholders"`"$'\r\n\r\n' >> $OUTPUT
   done
-    echo $regionlist;
-  cat $SCRIPT_DIR/templates/group.txt > $OUTPUT
-  printf "%s" "$regionlist" >> $OUTPUT
+  cat $OUTPUT
 )
 else
 	echo "Directory $1 is not valid."

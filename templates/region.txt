@@ -6,4 +6,3 @@ pitch_keycenter=60
 pan=0
 pitch_keytrack=0
 transpose=0
-
