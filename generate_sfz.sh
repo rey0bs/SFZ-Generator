@@ -20,7 +20,40 @@ done
 SAMPLES_DIR=$1
 OUTPUT=$2
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-TOTO="tu"
+
+toMidi() {
+    if [ "$1" ]
+    then
+        re='^[0-9]+$'
+        if [[ $1 =~ $re ]] ; then
+            echo "$1"
+        else
+            declare -A notes
+            notes["C"]=0
+            notes["C#"]=1
+            notes["Db"]=1
+            notes["D"]=2
+            notes["D#"]=3
+            notes["Eb"]=3
+            notes["E"]=4
+            notes["F"]=5
+            notes["F#"]=6
+            notes["Gb"]=6
+            notes["G"]=7
+            notes["G#"]=8
+            notes["Ab"]=8
+            notes["A"]=9
+            notes["A#"]=10
+            notes["Bb"]=10
+            notes["B"]=11
+            note=$(echo $1 | sed 's/[0-9]*//g')
+            octave=$(echo $1 | sed 's/[^0-9]*//g')
+            #echo ${octave}
+            echo $((${notes[$note]}+12*(2+$octave)))
+            #echo notes[$note]+12*(2+$octave)
+        fi
+    fi
+}
 
 if [[ -d $1 ]]
 then
@@ -43,10 +76,18 @@ then
         p_array=( ${file%.*} )
         for (( i=0 ; i<${#p_array[*]} ; i++ )) ; do
             echo ${p_array[$i]}
-            placeholders=$placeholders";s#"${p_array[$i]%:*}"=[^ ]*#"${p_array[$i]%:*}"="${p_array[$i]#*:}"#g"
+            if [ "${p_array[$i]%:*}" == "K" ]
+            then
+                for ph in lokey hikey pitch_keycenter ; do
+                    note=$(toMidi "${p_array[$i]#*:}")
+                    placeholders=$placeholders";s/"$ph"=[^ ]*/"$ph"="$note"/g"
+                done
+            else
+                placeholders=$placeholders";s/"${p_array[$i]%:*}"=[^ ]*/"${p_array[$i]%:*}"="${p_array[$i]#*:}"/g"
+            fi
         done
         IFS=$OLD_IFS
-        global_placeholders="s#__SAMPLE__#"$file"#g"$placeholders
+        global_placeholders="s/__SAMPLE__/"$file"/g"$placeholders
         echo $global_placeholders
 	regionlist="$regionlist `cat $SCRIPT_DIR/templates/region.txt | sed -e "$global_placeholders"`"
   done
