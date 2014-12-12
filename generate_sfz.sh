@@ -81,10 +81,16 @@ placeholdersFromFile() {
             value=${element#*$delimiter2}
             if [ "$name" == "K" ]
             then
-                for param in ${MIDI_PARAMS[@]} ; do
-                    note=$(toMidi "$value")
-                    placeholders=$placeholders";s/"$param"=[^ ]*/"$param"="$note"/g"
-                done
+                re='^[0-9A-Zb#]+-[0-9A-Zb#]+$'
+                if [[ $value =~ $re ]] ; then
+                    placeholders=$placeholders";s/lokey=[^ ]*/lokey="$(toMidi "${value%-*}")"/g"
+                    placeholders=$placeholders";s/hikey=[^ ]*/hikey="$(toMidi "${value#*-}")"/g"
+                else
+                    for param in ${MIDI_PARAMS[@]} ; do
+                        note=$(toMidi "$value")
+                        placeholders=$placeholders";s/"$param"=[^ ]*/"$param"="$note"/g"
+                    done
+                fi
             else
                 if [ $(contains "${MIDI_PARAMS[@]}" "$name") == "y" ]; then
                     value=$(toMidi "$value")
@@ -94,7 +100,7 @@ placeholdersFromFile() {
         done
         if ! [[ -d $1 ]]
         then
-            placeholders="s/__SAMPLE__/"$file"/g"$placeholders
+            placeholders="s|__SAMPLE__|"$2$file"|g"$placeholders
         fi
         echo $placeholders
     fi
@@ -106,12 +112,12 @@ generateSection() {
         placeholders=$(placeholdersFromFile "$1")
         printf "%s" $'\r\n\r\n'"`cat $SCRIPT_DIR/templates/group.txt | sed -e "$placeholders"`"$'\r\n\r\n'
         for file in $(ls "$1"); do
-            printf "%s" "$(generateSection "$file")"
+            printf "%s" "$(generateSection "$file" "$1/")"
         done
     else
         re='\.(ogg|wav|flac|mp3)$'
         if [[ $1 =~ $re ]] ; then
-            placeholders=$(placeholdersFromFile "$1")
+            placeholders=$(placeholdersFromFile "$1" "$2")
             printf "%s" "`cat $SCRIPT_DIR/templates/region.txt | sed -e "$placeholders"`"$'\r\n\r\n'
         fi
     fi
