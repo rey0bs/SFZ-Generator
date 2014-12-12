@@ -12,16 +12,16 @@ Each file contains its own parameters.
 
 ###Basic parameters
 If your file is named `/dir/HiHat__lokey=62__hikey=64__pitch_keycenter=63.wav` :
-- `lokey=62` will surcharge "lokey" value in templates/group.txt to generate output sfz.
-- `hikey=64` will surcharge "hikey" value in templates/group.txt to generate output sfz.
+- `lokey=62` will surcharge `'lokey'` value in `templates/group.txt` to generate output sfz.
+- `hikey=64` will surcharge `'hikey'` value in `templates/group.txt` to generate output sfz.
 
-Each parameters in group.txt can be overridden by this. Each value must be separated by `"__"` (two `'_'`) in file name.
+Each parameters in `group.txt` can be overridden by this. Each value must be separated by `"__"` (two `'_'`) in file name.
 
 ###Special parameters
-* **K** : Note key. Can be a MIDI number (like '60') or a note (like 'C#3'). This will be override 'lokey', 'hikey' and 'pitch_keycenter' values.
+* **K** : Note key. Can be a MIDI number (like '60') or a note (like 'C#3'). It will override `'lokey'`, `'hikey'` and `'pitch_keycenter'` values.
 
 ###Examples
-`
+```
 /
 ├── samples/
 │   ├── drum/
@@ -35,7 +35,7 @@ Each parameters in group.txt can be overridden by this. Each value must be separ
 │   │   ├── K=C#2.wav
 │   │   ├── K=D2.wav
 ...
-`
+```
 `./generate_sfz.sh /samples/drum/ /samples/drum/drum.sfz`
 `./generate_sfz.sh /samples/piano/ /samples/drum/piano.sfz`
 
