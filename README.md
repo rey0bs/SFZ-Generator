@@ -4,11 +4,12 @@ SFZ soundfont generator
 SFZ Generator is a simple bash script to generate basics sfz soundfonts libraries.
 
 ##Usage
-    ./generate_sfz.sh /path/to/samples/dir/ /path/to/samples/dir/file.sfz
+    ./generate_sfz.sh /path/to/samples/dir/ file.sfz
 
 ##Configuration
 SFZ Generator configuration is based on files names.
 Each file contains its own parameters.
+`'file.sfz'` file will be placed in `'/path/to/samples/dir/'` folder to avoid relative path errors.
 
 ###Basic parameters
 If your file is named `/dir/HiHat__lokey:62__hikey:64__pitch_keycenter:63.wav` :
