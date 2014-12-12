@@ -18,8 +18,22 @@ do
 done
 
 SAMPLES_DIR=$1
-OUTPUT=$2
+OUTPUT=$1/$2
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+MIDI_PARAMS=(lokey hikey pitch_keycenter)
+
+contains() {
+    local n=$#
+    local value=${!n}
+    for ((i=1;i < $#;i++)) {
+        if [ "${!i}" == "${value}" ]; then
+            echo "y"
+            return 1
+        fi
+    }
+    echo "n"
+    return 0
+}
 
 toMidi() {
     if [ "$1" ]
@@ -53,34 +67,67 @@ toMidi() {
     fi
 }
 
+placeholdersFromFile() {
+    if [ "$1" ]
+    then
+        file=$1
+        delimiter='__'
+        delimiter2=':'
+        placeholders=""
+        p_array=($(echo ${file%.*} | sed -e 's/'"$delimiter"'/\n/g' | while read line; do echo $line | sed 's/[\t ]/'"$delimiter"'/g'; done))
+        for (( i = 0; i < ${#p_array[@]}; i++ )); do
+            element=$(echo ${p_array[i]} | sed 's/'"$delimiter"'/ /')
+            name=${element%$delimiter2*}
+            value=${element#*$delimiter2}
+            if [ "$name" == "K" ]
+            then
+                for param in ${MIDI_PARAMS[@]} ; do
+                    note=$(toMidi "$value")
+                    placeholders=$placeholders";s/"$param"=[^ ]*/"$param"="$note"/g"
+                done
+            else
+                if [ $(contains "${MIDI_PARAMS[@]}" "$name") == "y" ]; then
+                    value=$(toMidi "$value")
+                fi
+                placeholders=$placeholders";s/"$name"=[^ ]*/"$name"="$value"/g"
+            fi
+        done
+        if ! [[ -d $1 ]]
+        then
+            placeholders="s/__SAMPLE__/"$file"/g"$placeholders
+        fi
+        echo $placeholders
+    fi
+}
+
+generateSection() {
+    if [[ -d $1 ]]
+    then
+        placeholders=$(placeholdersFromFile "$1")
+        printf "%s" $'\r\n\r\n'"`cat $SCRIPT_DIR/templates/group.txt | sed -e "$placeholders"`"$'\r\n\r\n'
+        for file in $(ls "$1"); do
+            printf "%s" "$(generateSection "$file")"
+        done
+    else
+        re='\.(ogg|wav|flac|mp3)$'
+        if [[ $1 =~ $re ]] ; then
+            placeholders=$(placeholdersFromFile "$1")
+            printf "%s" "`cat $SCRIPT_DIR/templates/region.txt | sed -e "$placeholders"`"$'\r\n\r\n'
+        fi
+    fi
+}
+
 if [[ -d $1 ]]
 then
     cd $SAMPLES_DIR
     (IFS='
     '
-    OLD_IFS="$IFS"
-    cmpt=0
-    cat $SCRIPT_DIR/templates/group.txt > $OUTPUT
-    for file in $(ls | grep -Ei '\.(ogg|wav|flac)'); do
-        delimiter='__'
-        placeholders=""
-        p_array=($(echo ${file%.*} | sed -e 's/'"$delimiter"'/\n/g' | while read line; do echo $line | sed 's/[\t ]/'"$delimiter"'/g'; done))
-        for (( i = 0; i < ${#p_array[@]}; i++ )); do
-            element=$(echo ${p_array[i]} | sed 's/'"$delimiter"'/ /')
-            if [ "${element%=*}" == "K" ]
-            then
-                for ph in lokey hikey pitch_keycenter ; do
-                    note=$(toMidi "${element#*=}")
-                    placeholders=$placeholders";s/"$ph"=[^ ]*/"$ph"="$note"/g"
-                done
-            else
-                placeholders=$placeholders";s/"${element%=*}"=[^ ]*/"${element%=*}"="${element#*=}"/g"
-            fi
-        done
-        placeholders="s/__SAMPLE__/"$file"/g"$placeholders
-        printf "%s" "`cat $SCRIPT_DIR/templates/region.txt | sed -e "$placeholders"`"$'\r\n\r\n' >> $OUTPUT
+    > $OUTPUT
+    for file in $(ls "$1"); do
+        sfz=$(printf "%s" "$(generateSection "$file")")
+        printf "%s" "$sfz" >> $OUTPUT
+        printf "%s" "$sfz"
     done
-    cat $OUTPUT
     )
 else
     echo "Directory $1 is not valid."
