@@ -2,19 +2,19 @@
 declare -A replaces
 while [ $# -gt 0 ]
 do
-      case "$1" in
-              --*)  parameter=${1#--}
-                    key=${parameter%=*}
-                    value=${parameter#*=}
-                    replaces[${key}]=${value}
-                    ;;
-              -*)
-                echo >&2 \
-                   "usage: $0 [--key=value] [SAMPLES_DIR] [OUTPUT_FILE]"
-                exit 1;;
-              *)  break;;
-      esac
-      shift
+    case "$1" in
+        --*)  parameter=${1#--}
+            key=${parameter%=*}
+            value=${parameter#*=}
+            replaces[${key}]=${value}
+            ;;
+        -*)
+            echo >&2 \
+                "usage: $0 [--key=value] [SAMPLES_DIR] [OUTPUT_FILE]"
+            exit 1;;
+        *)  break;;
+    esac
+    shift
 done
 
 SAMPLES_DIR=$1
@@ -55,41 +55,34 @@ toMidi() {
 
 if [[ -d $1 ]]
 then
-	cd $SAMPLES_DIR
-	if [[ ! -d "$HYDROGEN_DIR/$NAME" ]]
-	then
-		mkdir -p $HYDROGEN_DIR/$NAME
-  fi
- 
-  placeholders=""
-  (IFS='
-'
-  OLD_IFS="$IFS"
-  cmpt=0
-  cat $SCRIPT_DIR/templates/group.txt > $OUTPUT
-  for file in $(ls | grep -Ei '\.(ogg|wav|flac)'); do
-        IFS='-'
+    cd $SAMPLES_DIR
+    (IFS='
+    '
+    OLD_IFS="$IFS"
+    cmpt=0
+    cat $SCRIPT_DIR/templates/group.txt > $OUTPUT
+    for file in $(ls | grep -Ei '\.(ogg|wav|flac)'); do
+        delimiter='__'
         placeholders=""
-        p_array=( ${file%.*} )
-        for (( i=0 ; i<${#p_array[*]} ; i++ )) ; do
-            echo ${p_array[$i]}
-            if [ "${p_array[$i]%:*}" == "K" ]
+        p_array=($(echo ${file%.*} | sed -e 's/'"$delimiter"'/\n/g' | while read line; do echo $line | sed 's/[\t ]/'"$delimiter"'/g'; done))
+        for (( i = 0; i < ${#p_array[@]}; i++ )); do
+            element=$(echo ${p_array[i]} | sed 's/'"$delimiter"'/ /')
+            if [ "${element%=*}" == "K" ]
             then
                 for ph in lokey hikey pitch_keycenter ; do
-                    note=$(toMidi "${p_array[$i]#*:}")
+                    note=$(toMidi "${element#*=}")
                     placeholders=$placeholders";s/"$ph"=[^ ]*/"$ph"="$note"/g"
                 done
             else
-                placeholders=$placeholders";s/"${p_array[$i]%:*}"=[^ ]*/"${p_array[$i]%:*}"="${p_array[$i]#*:}"/g"
+                placeholders=$placeholders";s/"${element%=*}"=[^ ]*/"${element%=*}"="${element#*=}"/g"
             fi
         done
-        IFS=$OLD_IFS
         placeholders="s/__SAMPLE__/"$file"/g"$placeholders
         printf "%s" "`cat $SCRIPT_DIR/templates/region.txt | sed -e "$placeholders"`"$'\r\n\r\n' >> $OUTPUT
-  done
-  cat $OUTPUT
-)
+    done
+    cat $OUTPUT
+    )
 else
-	echo "Directory $1 is not valid."
-  echo "usage: $0 [--key=value] [SAMPLE_DIR] [OUTPUT_FILE]"
+    echo "Directory $1 is not valid."
+    echo "usage: $0 [--key=value] [SAMPLE_DIR] [OUTPUT_FILE]"
 fi
