@@ -3,27 +3,27 @@ SFZ soundfont generator
 
 SFZ Generator is a simple bash script to generate basics sfz soundfonts libraries.
 
-##Usage
+## Usage
     ./generate_sfz.sh /path/to/samples/dir/ file.sfz
 
 `'file.sfz'` file will be placed in `'/path/to/samples/dir/'` folder to avoid relative path errors.
 
-##Configuration
+## Configuration
 SFZ Generator configuration is based on files names.
 Each file contains its own parameters.
 
-###Basic parameters
+### Basic parameters
 If your file is named `/dir/HiHat__lokey:62__hikey:64__pitch_keycenter:63.wav` :
 - `lokey:62` will surcharge `'lokey'` value in `templates/group.txt` to generate output sfz.
 - `hikey:64` will surcharge `'hikey'` value in `templates/group.txt` to generate output sfz.
 
 Each parameters in `group.txt` can be overridden by this. Each value must be separated by `"__"` (two `'_'`) in file name.
 
-###Special parameters
+### Special parameters
 * **K:<note>** : Note key. It can be a MIDI number (like '60') or a note (like 'C#3'). It will set `'lokey'`, `'hikey'` and `'pitch_keycenter'` values.
 * **K:<note>-<note>** : Note range. It will set `'lokey'` and `'hikey'` values. If it is used for files, `'pitch_keycenter'` must be setted (`'__pitch_keycenter:<note>'`)
 
-###Examples
+### Examples
 ```
 /
 ├── samples/
